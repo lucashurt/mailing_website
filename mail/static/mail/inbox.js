@@ -33,3 +33,19 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 }
 
+function send_email(event) {
+  event.preventDefault();
+  fetch('/emails',{
+    method: 'POST',
+    body: JSON.stringify({
+      recipients:document.querySelector('#compose-recipients').value,
+      subject: document.querySelector('#compose-subject').value,
+      body: document.querySelector('#compose-body').value
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  })
+}
+
