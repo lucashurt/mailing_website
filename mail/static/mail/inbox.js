@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#compose').addEventListener('click', compose_email);
 
   document.querySelector("#compose-form").addEventListener('submit', send_email);
+
   // By default, load the inbox
   load_mailbox('inbox');
 });
@@ -16,6 +17,7 @@ function compose_email() {
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#individual-email-view').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -28,6 +30,7 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#individual-email-view').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -36,38 +39,37 @@ function load_mailbox(mailbox) {
     .then(res => res.json())
       .then(email => {
         email.forEach(individual_email => {
-          const element = document.createElement('div');
-          element.className = "row";
-          element.style.border="1px solid black"
-          element.style.justifyContent="space-between";
 
-          const sender = document.createElement('div');
+          const button = document.createElement('button');
+          button.className = "row";
+          button.style.width="100%"
+
+          const sender = document.createElement('p');
           sender.innerHTML = individual_email.sender;
           sender.style.fontWeight="bold";
           sender.style.marginRight="5%";
 
-          const subject = document.createElement('div');
+          const subject = document.createElement('p');
+          subject.href = ``
+          subject.style.color = "black";
           subject.innerHTML = individual_email.subject;
-          subject.style.border="1px solid black"
-          subject.style.textAlign="center"
 
           const left_side = document.createElement('div');
           left_side.className = "row";
-          left_side.append(sender);
-          left_side.append(subject);
           left_side.style.paddingLeft="2%";
           left_side.style.width="70%"
+          left_side.append(sender);
+          left_side.append(subject);
 
           const timestamp = document.createElement('div');
           timestamp.innerHTML = individual_email.timestamp;
           timestamp.style.color = "grey";
 
+          button.append(left_side);
+          button.append(timestamp);
 
-          element.append(left_side)
-          element.append(timestamp)
-
-          element.addEventListener('click', () => console.log("clicked"));
-          document.querySelector('#emails-view').append(element);
+          button.addEventListener('click', () => load_email(individual_email.id));
+          document.querySelector('#emails-view').append(button);
         })
       })
 }
@@ -88,4 +90,34 @@ function send_email(event) {
     load_mailbox('sent');
   })
 }
+function load_email(id){
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#individual-email-view').style.display = 'block';
 
+  document.querySelector('#individual-email-view').innerHTML='';
+
+  fetch(`/emails/${id}`, {
+   method: 'PUT',
+   body: JSON.stringify({
+   read: true
+   })
+   })
+
+  fetch(`/emails/${id}`)
+      .then(res => res.json())
+      .then(email => {
+        const element = document.createElement('div');
+
+        const email_information = document.createElement('p');
+        email_information.innerHTML = `<strong>From:</strong> ${email.sender} <br/> 
+                                       <strong>To:</strong>${email.recipients} <br/>
+                                       <strong>Subject:</strong> ${email.subject} <br/>
+                                       <strong>Timestamp:</strong> ${email.timestamp} <br/>
+                                       <button class = "btn btn-sm btn-outline-primary" type="submit"> Reply </button> <hr>
+                                       <p>${email.body}</p>`
+
+        element.append(email_information);
+        document.querySelector('#individual-email-view').append(element);
+      })
+}
