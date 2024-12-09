@@ -109,7 +109,7 @@ function load_email(id){
       .then(email => {
         const element = document.createElement('div');
 
-        const email_information = document.createElement('p');
+        const email_information = document.createElement('div');
         email_information.innerHTML = `<strong>From:</strong> ${email.sender} <br/> 
                                        <strong>To:</strong>${email.recipients} <br/>
                                        <strong>Subject:</strong> ${email.subject} <br/>
@@ -117,7 +117,47 @@ function load_email(id){
                                        <button class = "btn btn-sm btn-outline-primary" type="submit"> Reply </button> <hr>
                                        <p>${email.body}</p>`
 
+        let user_email = document.querySelector("h2").innerHTML
+        if(user_email === email.sender){
+          element.append(email_information)
+        }
+
+        else{
+        const archive_button = document.createElement('button');
+        archive_button.className = "btn btn-sm btn-outline-primary";
+
+        if (email.archived ===false){
+          archive_button.id = "archive"
+          archive_button.innerHTML = 'Archive';
+        }
+        else{
+          archive_button.id = "unarchive"
+          archive_button.innerHTML = 'Unarchive';
+        }
+
+        archive_button.addEventListener('click', () => archive_email(email.id,archive_button.innerHTML))
         element.append(email_information);
+        element.append(archive_button)}
+
         document.querySelector('#individual-email-view').append(element);
       })
+}
+function archive_email(id,action) {
+
+  if(action === 'Archive'){
+    fetch(`/emails/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        archived:true
+      })
+    })
+  }
+  else{
+    fetch(`/emails/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        archived:false
+      })
+    })
+  }
 }
