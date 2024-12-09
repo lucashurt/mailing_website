@@ -113,9 +113,15 @@ function load_email(id){
         email_information.innerHTML = `<strong>From:</strong> ${email.sender} <br/> 
                                        <strong>To:</strong>${email.recipients} <br/>
                                        <strong>Subject:</strong> ${email.subject} <br/>
-                                       <strong>Timestamp:</strong> ${email.timestamp} <br/>
-                                       <button class = "btn btn-sm btn-outline-primary" type="submit"> Reply </button> <hr>
+                                       <strong>Timestamp:</strong> ${email.timestamp} <hr>
                                        <p>${email.body}</p>`
+
+        const buttons =document.createElement('div');
+
+        const reply_button = document.createElement('button');
+        reply_button.className = "btn btn-sm btn-outline-primary";
+        reply_button.innerHTML = "Reply"
+        buttons.append(reply_button)
 
         let user_email = document.querySelector("h2").innerHTML
         if(user_email === email.sender){
@@ -134,10 +140,12 @@ function load_email(id){
           archive_button.id = "unarchive"
           archive_button.innerHTML = 'Unarchive';
         }
+        buttons.append(archive_button);
 
+        reply_button.addEventListener('click', () => reply(email.id));
         archive_button.addEventListener('click', () => archive_email(email.id,archive_button.innerHTML))
         element.append(email_information);
-        element.append(archive_button)}
+        element.append(buttons)}
 
         document.querySelector('#individual-email-view').append(element);
       })
@@ -159,5 +167,19 @@ function archive_email(id,action) {
         archived:false
       })
     })
+  .then(()=>load_mailbox('inbox'));
   }
+}
+function reply(id){
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#individual-email-view').style.display = 'none';
+
+    fetch(`/emails/${id}`)
+        .then(res => res.json())
+        .then(email => {
+            document.querySelector('#compose-recipients').value = `${email.recipients}`;
+            document.querySelector('#compose-subject').value = `Re:${email.subject}`;
+            document.querySelector('#compose-body').value = `On ${email.timestamp} ${email.sender} wrote "${email.body}"`;
+        })
 }
